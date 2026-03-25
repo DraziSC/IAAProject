@@ -65,7 +65,6 @@ def right(game_state):
     
 ##---TP1---    
 def pacman_reactive_agent(game_state):
-    ##TODO: Implement the reactive agent
     # if there is  ghost in the up direction, move down, if there is a ghost in the down direction, move up, 
     # if there is a ghost in the left direction, move right, if there is a ghost in the right direction,
     #  move left, otherwise move randomly
