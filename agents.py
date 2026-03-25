@@ -73,9 +73,9 @@ def pacman_reactive_agent(game_state):
     elif pacman_perceptions.ghost_down(game_state):
         up(game_state)
     elif pacman_perceptions.ghost_left(game_state):
-        left(game_state)
-    elif pacman_perceptions.ghost_right(game_state):
         right(game_state)
+    elif pacman_perceptions.ghost_right(game_state):
+        left(game_state)
     else:
         random.choice([up, down, left, right])(game_state)
 
