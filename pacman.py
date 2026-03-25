@@ -7,6 +7,7 @@ if __name__ == "__main__":
     #ghost order: 'Blinky', 'Pinky', 'Inky', 'Clyde'
 
     '''
+    pacman_policy = agents.pacman_reactive_agent_random
     pacman_policy = agents.keyboard_controller #use the arrow keys to control pacman
     ghost_policies = [agents.random_walk for _ in range(4)] 
     frightened_ghost_policies = [agents.random_walk for _ in range(4)]
@@ -16,6 +17,7 @@ if __name__ == "__main__":
     scores = np.zeros(100)
     for i in range(100):
         pacman_policy = agents.pacman_reactive_agent 
+        #pacman_policy = agents.pacman_reactive_agent_random
         #pacman_policy = agents.keyboard_controller   
         ghost_policies = [agents.blinky_agent, agents.pinky_agent, agents.inky_agent, agents.clyde_agent] 
         frightened_ghost_policies = [agents.run_away_from_pacman for _ in range(4)]

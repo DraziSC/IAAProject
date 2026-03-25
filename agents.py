@@ -66,9 +66,26 @@ def right(game_state):
 ##---TP1---    
 def pacman_reactive_agent(game_state):
     ##TODO: Implement the reactive agent
+    # if there is  ghost in the up direction, move down, if there is a ghost in the down direction, move up, 
+    # if there is a ghost in the left direction, move right, if there is a ghost in the right direction,
+    #  move left, otherwise move randomly
+    perceptions = pacman_perceptions.get_perceptions(game_state)    
+    if perceptions['ghost_up']:
+        down(game_state)
+    elif perceptions['ghost_down']:
+        up(game_state)
+    elif perceptions['ghost_left']:
+        left(game_state)
+    elif perceptions['ghost_right']:
+        right(game_state)
+    else:
+        random.choice([up, down, left, right])(game_state)
+
+def pacman_reactive_agent_random(game_state):
+    ##TODO: Implement the reactive agent
+  
     random.choice([up, down, left, right])(game_state)
 
-    
 def blinky_agent(ghost, game_state):
     #moves towards pacman
     pacman = game_state['pacman']
