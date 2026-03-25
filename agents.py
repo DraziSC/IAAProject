@@ -67,15 +67,14 @@ def right(game_state):
 def pacman_reactive_agent(game_state):
     # if there is  ghost in the up direction, move down, if there is a ghost in the down direction, move up, 
     # if there is a ghost in the left direction, move right, if there is a ghost in the right direction,
-    #  move left, otherwise move randomly
-    perceptions = pacman_perceptions.get_perceptions(game_state)    
-    if perceptions['ghost_up']:
+    #  move left, otherwise move randomly   
+    if pacman_perceptions.ghost_up(game_state):
         down(game_state)
-    elif perceptions['ghost_down']:
+    elif pacman_perceptions.ghost_down(game_state):
         up(game_state)
-    elif perceptions['ghost_left']:
+    elif pacman_perceptions.ghost_left(game_state):
         left(game_state)
-    elif perceptions['ghost_right']:
+    elif pacman_perceptions.ghost_right(game_state):
         right(game_state)
     else:
         random.choice([up, down, left, right])(game_state)
