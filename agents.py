@@ -63,33 +63,50 @@ def left(game_state):
 def right(game_state):
     game_engine.set_pacman_direction(game_state,'right')
     
-##---TP1---    
+##---TP1---  
+# 
+def free_directions(game_state):
+    #returns the directions that pacman can move to that does not have a ghost
+    directions = []
+    if not pacman_perceptions.ghost_up(game_state):
+        directions.append(up)
+    if not pacman_perceptions.ghost_down(game_state):
+        directions.append(down)
+    if not pacman_perceptions.ghost_left(game_state):
+        directions.append(left)
+    if not pacman_perceptions.ghost_right(game_state):
+        directions.append(right)
+    return directions
+
+def checkforWalls(game_state,directions):
+    for direction in directions:
+        if direction == up:
+            if pacman_perceptions.wall_up(game_state):
+                directions.remove(up)
+        elif direction == down:
+            if pacman_perceptions.wall_down(game_state):
+                directions.remove(down)
+        elif direction == left:
+            if pacman_perceptions.wall_left(game_state):
+                directions.remove(left)
+        elif direction == right:
+            if pacman_perceptions.wall_right(game_state):
+                directions.remove(right)
+    return directions
+
+
 def pacman_reactive_agent(game_state):
     # if there is  ghost in the up direction, move down, if there is a ghost in the down direction, move up, 
     # if there is a ghost in the left directi
     
-    if pacman_perceptions.ghost_up(game_state):
-        if pacman_perceptions.wall_down(game_state):
-            right(game_state)
-        else:
-            down(game_state)
-    elif pacman_perceptions.ghost_down(game_state):
-        if pacman_perceptions.wall_up(game_state):
-            right(game_state)
-        else:
-            up(game_state)
-    elif pacman_perceptions.ghost_left(game_state):
-        if pacman_perceptions.wall_right(game_state):
-            down(game_state)
-        else:
-            right(game_state)
-    elif pacman_perceptions.ghost_right(game_state):
-        if pacman_perceptions.wall_left(game_state):
-            down(game_state)
-        else:
-            left(game_state)
-    else:
+    
+    directions = checkforWalls(game_state, free_directions(game_state))
+    if len(directions) == 0:
         random.choice([up, down, left, right])(game_state)
+        return
+       
+    direction = random.choice(directions)(game_state)
+
 
 def pacman_reactive_agent_random(game_state):
     ##TODO: Implement the reactive agent
