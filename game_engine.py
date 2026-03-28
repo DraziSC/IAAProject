@@ -7,11 +7,11 @@ pygame.init()
 
 # Constants
 WINDOW_WIDTH, WINDOW_HEIGHT = 600, 600
-#FPS = 10
-#VISUALISE = True
+FPS = 10
+VISUALISE = True
 
-FPS = 0
-VISUALISE = False
+#FPS = 0
+#VISUALISE = False
 
 SCARED_GHOST_TIME = 10 #seconds
 PACMAN_CONTINUOUS_MOTION = True
