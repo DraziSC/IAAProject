@@ -19,7 +19,10 @@ def _run_one_game(seed):
     #pacman_policy = agents.pacman_risk_aware_agent
     #pacman_policy = agents.pacman_reactive_agent_no_random
     #acman_policy = agents.pacman_reactive_agent_random
-    pacman_policy = agents.pacman_reactive_agent_no_random
+    #pacman_policy = agents.pacman_reactive_agent_no_random
+    #pacman_policy = agents.pacman_reactive_agent_no_random_mark2
+    pacman_policy = agents.pacman_reactive_agent_no_random_mark1
+
     ghost_policies = [agents.blinky_agent, agents.pinky_agent, agents.inky_agent, agents.clyde_agent]
     frightened_ghost_policies = [agents.run_away_from_pacman for _ in range(4)]
 
