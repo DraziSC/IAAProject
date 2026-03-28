@@ -252,6 +252,32 @@ def check_won(game_state):
 def manhattan_distance(pos1, pos2):
     return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
 
+def maze_distance(pos1, pos2, grid, grid_size):
+    """
+    Computes the shortest path distance between pos1 and pos2 considering walls.
+    Uses Breadth-First Search (BFS).
+    """
+    if pos1 == pos2:
+        return 0
+        
+    from collections import deque
+    queue = deque([(pos1, 0)])
+    visited = {pos1}
+    
+    while queue:
+        current_pos, dist = queue.popleft()
+        
+        if current_pos == pos2:
+            return dist
+            
+        for direction in get_valid_directions(current_pos, grid, grid_size):
+            next_pos = compute_new_pos(current_pos, direction)
+            if next_pos not in visited:
+                visited.add(next_pos)
+                queue.append((next_pos, dist + 1))
+                
+    return float('inf')  # No path found
+
 def check_collisions(pacman, ghosts, game_state):
     for ghost in ghosts:
         if ghost['alive']:

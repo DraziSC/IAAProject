@@ -239,12 +239,12 @@ def pacman_reactive_agent_no_random_mark1(game_state):
         if alive_ghost_positions:
             best_dir = mobility_dirs[0]
             best_min_dist = min(
-                game_engine.manhattan_distance(game_engine.compute_new_pos(current_pos, best_dir), gp)
+                game_engine.maze_distance(game_engine.compute_new_pos(current_pos, best_dir), gp, grid, grid_size)
                 for gp in alive_ghost_positions
             )
             for d in mobility_dirs:
                 cand_pos = game_engine.compute_new_pos(current_pos, d)
-                cand_min_dist = min(game_engine.manhattan_distance(cand_pos, gp) for gp in alive_ghost_positions)
+                cand_min_dist = min(game_engine.maze_distance(cand_pos, gp, grid, grid_size) for gp in alive_ghost_positions)
                 if cand_min_dist > best_min_dist:
                     best_min_dist = cand_min_dist
                     best_dir = d
@@ -272,22 +272,53 @@ def pacman_reactive_agent_no_random_mark1(game_state):
         if not food_positions:
             return
         
-        nearest_food = min(food_positions, key=lambda fp: game_engine.manhattan_distance(current_pos, fp))
+        nearest_food = min(food_positions, key=lambda fp: game_engine.maze_distance(current_pos, fp, grid, grid_size))
         best_dir = food_legal_dirs[0]
         best_pos = game_engine.compute_new_pos(current_pos, best_dir)
-        best_dist = game_engine.manhattan_distance(best_pos, nearest_food)
+        best_dist = game_engine.maze_distance(best_pos, nearest_food, grid, grid_size)
         
         for d in food_legal_dirs:
             cand_pos = game_engine.compute_new_pos(current_pos, d)
-            cand_dist = game_engine.manhattan_distance(cand_pos, nearest_food)
+            cand_dist = game_engine.maze_distance(cand_pos, nearest_food, grid, grid_size)
             if cand_dist < best_dist:
                 best_dist = cand_dist
                 best_pos = cand_pos
                 best_dir = d
         dir_to_action[best_dir](game_state)
 
-
 def pacman_reactive_agent_no_random_mark2(game_state):
+    # Similiar to pacman_reactive_agent_no_random_mark1 but now chase scared ghosts when they are nearby.
+    pacman = game_state['pacman']
+    grid = game_state['grid']
+    grid_size = game_state['grid_size']
+    current_pos = (pacman['x'], pacman['y'])
+    legal_dirs = game_engine.get_valid_directions(current_pos, grid, grid_size)
+    if not legal_dirs:
+        return
+    dir_to_action = {
+        'up': up,
+        'down': down,
+        'left': left,
+        'right': right,
+    }
+    scared_ghosts = [g for g in game_state['ghosts'] if g['alive'] and g['scared']]
+    if scared_ghosts:
+        # Chase scared ghosts to farm points when they are edible.
+        best_dir = legal_dirs[0]
+        best_pos = game_engine.compute_new_pos(current_pos, best_dir)
+        best_dist = min(game_engine.maze_distance(best_pos, (g['x'], g['y']), grid, grid_size) for g in scared_ghosts)
+        for d in legal_dirs:
+            cand_pos = game_engine.compute_new_pos(current_pos, d)
+            cand_dist = min(game_engine.maze_distance(cand_pos, (g['x'], g['y']), grid, grid_size) for g in scared_ghosts)
+            if cand_dist < best_dist:
+                best_dist = cand_dist
+                best_pos = cand_pos
+                best_dir = d
+        dir_to_action[best_dir](game_state)
+    else:
+        pacman_reactive_agent_no_random_mark1(game_state)
+
+def pacman_reactive_agent_no_random_mark_defunct(game_state):
     # Similar to pacman_reactive_agent_no_random but with a more sophisticated food chasing strategy that considers mobility and 
     # dead ends and avoids local loops.
 
