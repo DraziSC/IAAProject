@@ -112,6 +112,13 @@ def pacman_reactive_agent_no_random(game_state):
     # Rule 1 : If ghost above, move down. If ghost below, move up. If ghost left, move right. If ghost right, move left.
     # Rule 2 : If no ghosts around, move towards the closest food
 
+    # Issues: 
+    # 1. Nieve ghost check only checks for a single ghost and does not consider if ghost in new direction after move.
+    # 2. Hunt for food is greedy and can lead to cycles/local loops
+    # 3. Does not consider scared ghosts or power pellets at all.
+    # 4. Does not consider mobility or dead ends at all.
+    # 5. Does not consider predicted ghost movement at all.
+     
     pacman = game_state['pacman']
     grid = game_state['grid']
     grid_size = game_state['grid_size']
