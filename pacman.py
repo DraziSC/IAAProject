@@ -6,7 +6,7 @@ from multiprocessing import get_context
 import numpy as np
 
 # Headless mode avoids opening many windows when benchmarking in parallel.
-#os.environ.setdefault('SDL_VIDEODRIVER', 'dummy')
+os.environ.setdefault('SDL_VIDEODRIVER', 'dummy')
 
 import game_engine
 import agents
@@ -30,14 +30,23 @@ def _run_one_game(args):
     )
 
 policyResults = [] # Store results for all policies here
+USE_ORIGINAL_SEED = False # Set to False to use different seeds for each game, which can help with benchmarking but reduces reproducibility.
+
 def run_benchmark(policy, num_games=100, num_workers=1, base_seed=42):
-    seeds = [base_seed + i for i in range(num_games)]
-    # Create (seed, policy) tuples to pass to workers
-    seed_policy_pairs = [(s, policy) for s in seeds]
+
+    if USE_ORIGINAL_SEED:
+        seed_policy_pairs = [(base_seed, policy) for _ in range(num_games)]
+    else:
+        seeds = [base_seed + i for i in range(num_games)]
+        seed_policy_pairs = [(s, policy) for s in seeds]
 
     if num_workers <= 1:
         scores = np.array([_run_one_game(pair) for pair in seed_policy_pairs], dtype=float)
     else:
+        # Keep parallel behavior unchanged.
+        #seeds = [base_seed + i for i in range(num_games)]
+        # Create (seed, policy) tuples to pass to workers
+        #seed_policy_pairs = [(s, policy) for s in seeds]
         # Use spawn for safer multiprocessing with pygame state.
         ctx = get_context('spawn')
         with ProcessPoolExecutor(max_workers=num_workers, mp_context=ctx) as pool:
@@ -73,8 +82,8 @@ if __name__ == "__main__":
     '''
     #---TP1---
     # Use os.cpu_count() to utilize all cores, or set a fixed integer.
-    #workers = max(1, (os.cpu_count() or 1) - 1)
-    workers = 1
+    workers = max(1, (os.cpu_count() or 1) - 1)
+    #workers = 1
     if(RunAllPolicies):
         # Run benchmark for all policies
         # Note: This will take a long time to run with many workers, as it runs 100 games for each of the 5 policies.
