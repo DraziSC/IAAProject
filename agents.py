@@ -318,6 +318,85 @@ def pacman_reactive_agent_no_random_mark2(game_state):
     else:
         pacman_reactive_agent_no_random_mark1(game_state)
 
+def pacman_reactive_agent_no_random_mark3(game_state):
+    # Mark3: keep Mark1 safety behavior, and only chase scared ghosts when nearby and safe.
+    pacman = game_state['pacman']
+    grid = game_state['grid']
+    grid_size = game_state['grid_size']
+    current_pos = (pacman['x'], pacman['y'])
+    legal_dirs = game_engine.get_valid_directions(current_pos, grid, grid_size)
+    if not legal_dirs:
+        return
+
+    dir_to_action = {
+        'up': up,
+        'down': down,
+        'left': left,
+        'right': right,
+    }
+
+    scared_ghosts = [g for g in game_state['ghosts'] if g['alive'] and g['scared']]
+    active_ghosts = [g for g in game_state['ghosts'] if g['alive'] and not g['scared']]
+
+    if not scared_ghosts:
+        pacman_reactive_agent_no_random_mark1(game_state)
+        return
+
+    # Keep the immediate local threat checks from Mark1 as the top priority.
+    ghost_seen = {
+        'up': pacman_perceptions.ghost_up(game_state, 2),
+        'down': pacman_perceptions.ghost_down(game_state, 2),
+        'left': pacman_perceptions.ghost_left(game_state, 2),
+        'right': pacman_perceptions.ghost_right(game_state, 2),
+    }
+    if any(ghost_seen.values()):
+        pacman_reactive_agent_no_random_mark1(game_state)
+        return
+
+    nearest_scared_dist = min(
+        game_engine.maze_distance(current_pos, (g['x'], g['y']), grid, grid_size)
+        for g in scared_ghosts
+    )
+    # Only switch to chase mode when a scared ghost is reasonably close.
+    if nearest_scared_dist > 6:
+        pacman_reactive_agent_no_random_mark1(game_state)
+        return
+
+    candidates = []
+    for d in legal_dirs:
+        nxt = game_engine.compute_new_pos(current_pos, d)
+
+        if any((g['x'], g['y']) == nxt for g in active_ghosts):
+            continue
+
+        min_active_dist = float('inf')
+        if active_ghosts:
+            min_active_dist = min(
+                game_engine.maze_distance(nxt, (g['x'], g['y']), grid, grid_size)
+                for g in active_ghosts
+            )
+            if min_active_dist < 2:
+                continue
+
+        mobility = len(game_engine.get_valid_directions(nxt, grid, grid_size))
+        if active_ghosts and mobility <= 1:
+            continue
+
+        min_scared_dist = min(
+            game_engine.maze_distance(nxt, (g['x'], g['y']), grid, grid_size)
+            for g in scared_ghosts
+        )
+
+        # Sort key: closer scared ghost first, then higher mobility, then farther from danger.
+        candidates.append((min_scared_dist, -mobility, -min_active_dist, d))
+
+    if not candidates:
+        pacman_reactive_agent_no_random_mark1(game_state)
+        return
+
+    _, _, _, best_dir = min(candidates)
+    dir_to_action[best_dir](game_state)
+
 def pacman_reactive_agent_no_random_mark_defunct(game_state):
     # Similar to pacman_reactive_agent_no_random but with a more sophisticated food chasing strategy that considers mobility and 
     # dead ends and avoids local loops.

@@ -127,9 +127,9 @@ if __name__ == "__main__":
     random.seed(42)
     RunAllPolicies = True # Set to True to run benchmark for all policies, or False to run a single policy.
     policies = [agents.pacman_reactive_agent_random, agents.pacman_reactive_agent_no_random, agents.pacman_reactive_agent_no_random_mark1,
-                agents.pacman_reactive_agent_no_random_mark2, agents.pacman_risk_aware_agent]
+                agents.pacman_reactive_agent_no_random_mark2, agents.pacman_reactive_agent_no_random_mark3, agents.pacman_risk_aware_agent]
     #policies = [agents.pacman_reactive_agent_random, agents.pacman_reactive_agent_no_random_mark1,
-    #            agents.pacman_reactive_agent_no_random_mark2, agents.pacman_risk_aware_agent]
+    #            agents.pacman_reactive_agent_no_random_mark2, agents.pacman_reactive_agent_no_random_mark3, agents.pacman_risk_aware_agent]
     '''
     pacman_policy = agents.pacman_reactive_agent_random
     pacman_policy = agents.keyboard_controller #use the arrow keys to control pacman
