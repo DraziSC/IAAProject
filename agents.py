@@ -188,6 +188,17 @@ def pacman_reactive_agent_no_random_mark1(game_state):
     # same as no random but better checking for multiple ghosts in multiple directions. 
     # If there are ghosts in multiple directions, move in the direction with the most free spaces and no ghosts. 
     # This is a simple way to try to avoid getting trapped by multiple ghosts.
+    """
+    Production rules for Mark1:
+    ID	    Perception	                                    Action
+    R1		Non‑scared ghost on current tile	            Choose a direction that does not have a ghost and has the most free spaces (highest mobility) and is furthest away from a ghost. 
+                                                            Avoid reversing direction unless forced.
+    R2		Non‑scared ghost in any adjacent tile	        Choose a direction that does not have a ghost and has the most free spaces (highest mobility) and is furthest away from a ghost.
+                                                            Avoid reversing direction unless forced.
+    R3		No Ghost detected 	                            Move forward nearest food
+
+    """
+
     pacman = game_state['pacman']
     grid = game_state['grid']
     grid_size = game_state['grid_size']
@@ -288,6 +299,14 @@ def pacman_reactive_agent_no_random_mark1(game_state):
 
 def pacman_reactive_agent_no_random_mark2(game_state):
     # Similiar to pacman_reactive_agent_no_random_mark1 but now chase scared ghosts when they are nearby.
+    """
+    Production rules for Mark2:
+    ID	    Perception	                                    Action
+    R1		If scared ghosts exist	                        Choose a direction that moves closer to the nearest scared ghost.
+    R2      Non‑scared ghost on current tile	            Choose a direction that does not have a ghost and has the most free spaces (highest mobility) and is furthest away from a ghost.
+    R3      Non‑scared ghost in any adjacent tile	        Choose a direction that does not have a ghost and has the most free spaces (highest mobility) and is furthest away from a ghost.
+    R4      No Ghost detected 	                            Move forward nearest food
+    """
     pacman = game_state['pacman']
     grid = game_state['grid']
     grid_size = game_state['grid_size']
@@ -320,6 +339,15 @@ def pacman_reactive_agent_no_random_mark2(game_state):
 
 def pacman_reactive_agent_no_random_mark3(game_state):
     # Mark3: keep Mark1 safety behavior, and only chase scared ghosts when nearby and safe.
+    """
+    Production rules for Mark3:
+    ID	    Perception	                                                                Action
+    R1		If scared ghosts exist AND close AND no active ghosts nearby	            Choose a direction that moves closer to the nearest scared ghost.
+    R2      Non‑scared ghost on current tile        	                                Choose a direction that does not have a ghost and has the most free spaces (highest mobility) and is furthest away from a ghost.
+    R3      Non‑scared ghost in any adjacent tile	                                    Choose a direction that does not have a ghost and has the most free spaces (highest mobility) and is furthest away from a ghost.
+    R4      No Ghost detected 	                                                        Move forward nearest food
+    """
+     
     pacman = game_state['pacman']
     grid = game_state['grid']
     grid_size = game_state['grid_size']
@@ -357,6 +385,7 @@ def pacman_reactive_agent_no_random_mark3(game_state):
         game_engine.maze_distance(current_pos, (g['x'], g['y']), grid, grid_size)
         for g in scared_ghosts
     )
+
     # Only switch to chase mode when a scared ghost is reasonably close.
     if nearest_scared_dist > 6:
         pacman_reactive_agent_no_random_mark1(game_state)
@@ -366,9 +395,11 @@ def pacman_reactive_agent_no_random_mark3(game_state):
     for d in legal_dirs:
         nxt = game_engine.compute_new_pos(current_pos, d)
 
+        # Avoid moves that would put us in the same cell as an active ghost.
         if any((g['x'], g['y']) == nxt for g in active_ghosts):
             continue
 
+        # Also avoid moves that would put us within a certain distance of active ghosts, even if not in the same cell, to reduce risk while chasing.
         min_active_dist = float('inf')
         if active_ghosts:
             min_active_dist = min(
@@ -378,10 +409,12 @@ def pacman_reactive_agent_no_random_mark3(game_state):
             if min_active_dist < 2:
                 continue
 
+        # Consider mobility as a tie-breaker to prefer paths with more escape routes, which can help avoid getting trapped by active ghosts while chasing scared ones.
         mobility = len(game_engine.get_valid_directions(nxt, grid, grid_size))
         if active_ghosts and mobility <= 1:
             continue
 
+        # Finally, consider distance to scared ghosts to prioritize chasing the closest one.
         min_scared_dist = min(
             game_engine.maze_distance(nxt, (g['x'], g['y']), grid, grid_size)
             for g in scared_ghosts
@@ -398,7 +431,7 @@ def pacman_reactive_agent_no_random_mark3(game_state):
     dir_to_action[best_dir](game_state)
 
 def pacman_reactive_agent_no_random_mark_defunct(game_state):
-    # Similar to pacman_reactive_agent_no_random but with a more sophisticated food chasing strategy that considers mobility and 
+    # Similar to pacman_reactive_agent_no_random but with a more sophisticated Ghost chasing strategy that considers mobility and 
     # dead ends and avoids local loops.
 
     pacman = game_state['pacman']
@@ -549,6 +582,69 @@ def pacman_risk_aware_agent(game_state):
     Risk-aware policy for Pacman.
     Scores each legal move using immediate ghost danger, predicted ghost movement,
     local mobility (escape routes), food reward, and scared-ghost opportunities.
+    Uses memory of recent positions to discourage local loops and a stall counter to encourage exploration if stuck.
+    Uses a weighted scoring system to balance safety and progress toward winning.
+
+    Current weights and what they do (very risk averse):
+
+        Immediate collision with active ghost: -10000
+        Predicted deterministic ghost next tile: -300
+        Predicted random ghost next tile: -120
+        Distance from nearest active ghost: +8 × min_dist
+        Scared-ghost chase term: +35 - 7 × min_scared_dist
+        Landing directly on scared ghost: +500
+        Dot reward: +25
+        Power pellet reward: +90
+        Global food attraction: +40 - 2 × nearest_food_dist
+        Mobility reward: +6 × number_of_future_dirs
+        Dead-end penalty under nearby threat: -200
+        Reverse-direction penalty: -10
+        Recent-position revisit penalty: -18 × revisit_count
+
+    Use this moderate riskier preset first:
+
+        Keep death collision at -10000
+        Deterministic next-tile risk: -180
+        Random next-tile risk: -70
+        Active-ghost distance bonus: +4
+        Scared chase: +55 - 10d
+        Eat scared ghost bonus: +700
+        Dot: +35
+        Pellet: +130
+        Food pull: +55 - 1d
+        Mobility: +3
+        Dead-end under threat: -90
+        Reverse: -5
+        Revisit: -8
+
+    Aggressive riskier preset:
+
+        Keep death collision at -10000
+        Deterministic next-tile risk: -120
+        Random next-tile risk: -40
+        Active-ghost distance bonus: +2
+        Scared chase: +80 - 12d
+        Eat scared ghost bonus: +1000
+        Dot: +40
+        Pellet: +180
+        Food pull: +70 - 1d
+        Mobility: +2
+        Dead-end under threat: -40
+        Reverse: -2
+        Revisit: -4
+
+    Production rules for Risk-Aware policy:
+    ID      Priority  Condition (informal)                                      Action (informal)
+    R1      1         Candidate move lands on active ghost                      Apply very large penalty (effectively reject)
+    R2      2         Candidate move is in likely next ghost positions           Apply strong risk penalties
+    R3      3         Active ghosts exist                                        Prefer moves with larger distance to nearest active ghost
+    R4      4         Scared ghosts exist                                        Prefer moves that reduce distance to scared ghosts; bonus if edible now
+    R5      5         Candidate cell has food or power pellet                    Add immediate reward for collecting it
+    R6      6         Food remains on board                                      Prefer moves that reduce distance to nearest remaining food
+    R7      7         Candidate has higher future mobility                       Prefer more escape routes; penalize dead-end under threat
+    R8      8         Candidate reverses current direction                       Apply small anti-oscillation penalty
+    R9      9         Candidate revisits recent positions                        Apply revisit penalty to break local loops
+    R10     10        After all rule scores are combined                         Choose legal move with maximum total score
     """
     pacman = game_state['pacman']
     grid = game_state['grid']

@@ -151,16 +151,20 @@ if __name__ == "__main__":
         # After running all policies, print a summary of results
         print("\nSummary of Results:")
         for policy_name, scores, winners in policyResults:
+            max = np.max(scores)
+            min = np.min(scores)
             avg = np.mean(scores)
             std = np.std(scores)
-            print(f'Policy: {policy_name}, Average Score: {avg}, Standard Deviation: {std}, Wins: {winners}')
+            print(f'Policy: {policy_name}, Max Score: {max}, Min Score: {min}, Average Score: {avg}, Standard Deviation: {std}, Wins: {winners}')
     else:
-        policy = policies[2] # Change this index to select a different policy from the list  
+        policy = policies[4] # Change this index to select a different policy from the list  
         run_benchmark(policy, num_games=100, num_workers=workers, base_seed=42)
         for policy_name, scores, winners in policyResults:
+            max = np.max(scores)
+            min = np.min(scores)
             avg = np.mean(scores)
             std = np.std(scores)
-            print(f'Policy: {policy_name}, Average Score: {avg}, Standard Deviation: {std}, Wins: {winners}')
+            print(f'Policy: {policy_name}, Max Score: {max}, Min Score: {min}, Average Score: {avg}, Standard Deviation: {std}, Wins: {winners}')
         
     displayAllResults(policyResults)
 
