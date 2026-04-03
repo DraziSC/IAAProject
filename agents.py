@@ -109,6 +109,14 @@ def pacman_reactive_agent(game_state):
 
 def pacman_reactive_agent_no_random(game_state):
     # Whats this doing in English? 
+    '''
+   Rules R1–R4 handle the most critical case: when a non-scared ghost is on the same tile,
+     the agent immediately moves in the opposite direction to avoid danger. 
+     Rules R5–R8 extend this behavior to adjacent tiles, ensuring the agent proactively 
+     escapes nearby threats. If no ghost is detected, 
+     Rule R9 activates a goal-oriented behavior: the agent selects a 
+     legal direction (excluding reversal) and moves toward the nearest food source.
+    '''
 
     # List Perceptions and Actions
     # Perceptions                                            Actions
