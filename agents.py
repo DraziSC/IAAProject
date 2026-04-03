@@ -140,11 +140,7 @@ def pacman_reactive_agent_no_random(game_state):
     # R7        Non‑scared ghost in any adjacent tile AND ghost left AND Legal direction	                    Move Right.
     # R8        Non‑scared ghost in any adjacent tile AND ghost right AND Legal direction	                    Move Left.
     # R9		No Ghost detected AND get legal directions AND NOT opposite AND nearest food direction	        Move toward nearest food
-    # 
-    #     
-    # First attempt simple rules
-    # Rule 1 : If ghost above, move down. If ghost below, move up. If ghost left, move right. If ghost right, move left.
-    # Rule 2 : If no ghosts around, move towards the closest food
+    #    
 
     # Issues: 
     # 1. Nieve ghost check only checks for a single ghost and does not consider if ghost in new direction after move.
