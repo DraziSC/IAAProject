@@ -724,7 +724,7 @@ def pacman_risk_aware_agent(game_state):
         if ghost['direction'] is not None:
             opp = game_engine.opposite_direction(ghost['direction'])
             if len(gdirs) > 1 and opp in gdirs:
-                gdirs.remove(opp)T # S
+                gdirs.remove(opp) # S
 
         if ghost['name'] == 'Inky':
             for d in gdirs:
