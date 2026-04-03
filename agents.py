@@ -223,6 +223,7 @@ def pacman_reactive_agent_no_random_mark1(game_state):
     # same as no random but better checking for multiple ghosts in multiple directions. 
     # If there are ghosts in multiple directions, move in the direction with the most free spaces and no ghosts. 
     # This is a simple way to try to avoid getting trapped by multiple ghosts.
+    # Also uses maze distance instead of Manhattan distance to food to better navigate around walls.
     """
     Production rules for Mark1:
     ID	    Perception	                                    Action
