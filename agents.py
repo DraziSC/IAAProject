@@ -108,6 +108,32 @@ def pacman_reactive_agent(game_state):
     direction = random.choice(directions)(game_state)
 
 def pacman_reactive_agent_no_random(game_state):
+    # Whats this doing in English? 
+
+    # List Perceptions and Actions
+    # Perceptions                                            Actions
+    # Ghost up	                                             Move down
+    # Ghost down	                                         Move up
+    # Ghost left	                                         Move right
+    # Ghost right	                                         Move left
+    # No ghost	                                             Move towards closest food (using Manhattan distance) by direction
+    # Legal Directions
+    # Opposite Direction
+    # nearest food using Manhattan distance
+     
+    # Production rules(table):
+    # ID	    Perception	                                                                                    Action
+    # R1		Non‑scared ghost on current tile AND ghost up AND legal direction	                            Move Down.
+    # R2        Non‑scared ghost on current tile AND ghost down	AND legal direction	                            Move Up.
+    # R3        Non‑scared ghost on current tile AND ghost left	AND legal direction	                            Move Right.
+    # R4        Non‑scared ghost on current tile AND ghost right AND Legal direction	                        Move Left.
+    # R5        Non‑scared ghost in any adjacent tile AND ghost up AND Legal direction                          Move Down.
+    # R6        Non‑scared ghost in any adjacent tile AND ghost down AND Legal direction	                    Move Up.
+    # R7        Non‑scared ghost in any adjacent tile AND ghost left AND Legal direction	                    Move Right.
+    # R8        Non‑scared ghost in any adjacent tile AND ghost right AND Legal direction	                    Move Left.
+    # R9		No Ghost detected AND get legal directions AND NOT opposite AND nearest food direction	        Move toward nearest food
+    # 
+    #     
     # First attempt simple rules
     # Rule 1 : If ghost above, move down. If ghost below, move up. If ghost left, move right. If ghost right, move left.
     # Rule 2 : If no ghosts around, move towards the closest food
@@ -153,16 +179,20 @@ def pacman_reactive_agent_no_random(game_state):
         print("Moving left to avoid ghost on the right")
     else:
         food_legal_dirs = legal_dirs.copy()
+        # Avoid reversing direction unless forced, to prevent oscillation.
         op = game_engine.opposite_direction(pacman['direction'])
+        # Only remove the opposite direction if there are other options, otherwise we might end up with no legal moves.
         if len(food_legal_dirs) > 1 and op in food_legal_dirs:
             food_legal_dirs.remove(op)
 
+        # If removing the opposite direction leaves us with no options, we have to allow it to prevent getting stuck.
         if not food_legal_dirs:
             food_legal_dirs = legal_dirs
 
         # No immediate ghost threat, move towards closest food
         # print('No immediate ghost threat, moving towards closest food' )
         food_positions = []
+
         for y, row in enumerate(grid):
             for x, cell in enumerate(row):
                 if cell == game_engine.DOT or cell == game_engine.POWER_PELLET:
@@ -175,6 +205,7 @@ def pacman_reactive_agent_no_random(game_state):
         best_pos = game_engine.compute_new_pos(current_pos, best_dir)
         best_dist = game_engine.manhattan_distance(best_pos, nearest_food)
         
+        # Greedily choose the move that minimizes distance to the nearest food. This can lead to local loops, but is a simple starting point.
         for d in food_legal_dirs:
             cand_pos = game_engine.compute_new_pos(current_pos, d)
             cand_dist = game_engine.manhattan_distance(cand_pos, nearest_food)
@@ -421,6 +452,7 @@ def pacman_reactive_agent_no_random_mark3(game_state):
         )
 
         # Sort key: closer scared ghost first, then higher mobility, then farther from danger.
+        # choose the move that gets closest to a scared ghost, while also preferring more open positions and safer positions away from active ghosts.
         candidates.append((min_scared_dist, -mobility, -min_active_dist, d))
 
     if not candidates:
@@ -692,7 +724,7 @@ def pacman_risk_aware_agent(game_state):
         if ghost['direction'] is not None:
             opp = game_engine.opposite_direction(ghost['direction'])
             if len(gdirs) > 1 and opp in gdirs:
-                gdirs.remove(opp)
+                gdirs.remove(opp)T # S
 
         if ghost['name'] == 'Inky':
             for d in gdirs:
