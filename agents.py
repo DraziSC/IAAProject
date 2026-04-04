@@ -403,6 +403,8 @@ def pacman_reactive_agent_no_random_mark3(game_state):
     active_ghosts = [g for g in game_state['ghosts'] if g['alive'] and not g['scared']]
 
     if not scared_ghosts:
+        pacman['_mark3_stall_steps'] = 0
+        pacman['_mark3_last_scared_dist'] = None
         pacman_reactive_agent_no_random_mark1(game_state)
         return
 
@@ -421,6 +423,23 @@ def pacman_reactive_agent_no_random_mark3(game_state):
         game_engine.maze_distance(current_pos, (g['x'], g['y']), grid, grid_size)
         for g in scared_ghosts
     )
+
+    # Stall breaker with tolerance: only break chase after several non-improving steps.
+    stall_limit = 3
+    last_scared_dist = pacman.setdefault('_mark3_last_scared_dist', None)
+    stall_steps = pacman.setdefault('_mark3_stall_steps', 0)
+    if last_scared_dist is not None and nearest_scared_dist >= last_scared_dist:
+        stall_steps += 1
+    else:
+        stall_steps = 0
+    pacman['_mark3_stall_steps'] = stall_steps
+    pacman['_mark3_last_scared_dist'] = nearest_scared_dist
+
+    if stall_steps >= stall_limit:
+        pacman['_mark3_stall_steps'] = 0
+        pacman['_mark3_last_scared_dist'] = None
+        pacman_reactive_agent_no_random_mark1(game_state)
+        return
 
     # Only switch to chase mode when a scared ghost is reasonably close.
     if nearest_scared_dist > 6:
