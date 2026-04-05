@@ -219,6 +219,77 @@ def pacman_reactive_agent_no_random(game_state):
                 best_dir = d
         dir_to_action[best_dir](game_state)
 
+
+def pacman_reactive_agent_no_random_perception(game_state):
+    # Copy of pacman_reactive_agent_no_random, but food search uses directional dot perceptions.
+    pacman = game_state['pacman']
+    grid = game_state['grid']
+    grid_size = game_state['grid_size']
+
+    current_pos = (pacman['x'], pacman['y'])
+    legal_dirs = game_engine.get_valid_directions(current_pos, grid, grid_size)
+
+    if not legal_dirs:
+        return
+
+    dir_to_action = {
+        'up': up,
+        'down': down,
+        'left': left,
+        'right': right,
+    }
+
+    if pacman_perceptions.ghost_up(game_state, 2) and 'down' in legal_dirs:
+        down(game_state)
+        print("Moving down to avoid ghost above")
+    elif pacman_perceptions.ghost_down(game_state, 2) and 'up' in legal_dirs:
+        up(game_state)
+        print("Moving up to avoid ghost below")
+    elif pacman_perceptions.ghost_left(game_state, 2) and 'right' in legal_dirs:
+        right(game_state)
+        print("Moving right to avoid ghost on the left")
+    elif pacman_perceptions.ghost_right(game_state, 2) and 'left' in legal_dirs:
+        left(game_state)
+        print("Moving left to avoid ghost on the right")
+    else:
+        food_legal_dirs = legal_dirs.copy()
+        op = game_engine.opposite_direction(pacman['direction'])
+        if len(food_legal_dirs) > 1 and op in food_legal_dirs:
+            food_legal_dirs.remove(op)
+
+        if not food_legal_dirs:
+            food_legal_dirs = legal_dirs
+
+        visibility_range = max(grid_size)
+
+        # Measure nearest perceived dot/pellet distance per direction.
+        # Check how slow this is and optimize if needed, as it does a lot of redundant checks.
+        dot_distance = {d: float('inf') for d in food_legal_dirs}
+        for d in food_legal_dirs:
+            for r in range(1, visibility_range + 1):
+                if d == 'up' and pacman_perceptions.dot_up(game_state, r):
+                    dot_distance[d] = r
+                    break
+                if d == 'down' and pacman_perceptions.dot_down(game_state, r):
+                    dot_distance[d] = r
+                    break
+                if d == 'left' and pacman_perceptions.dot_left(game_state, r):
+                    dot_distance[d] = r
+                    break
+                if d == 'right' and pacman_perceptions.dot_right(game_state, r):
+                    dot_distance[d] = r
+                    break
+
+        # Choose the legal direction with the shortest perceived food distance.
+        nearest_dirs = [d for d in food_legal_dirs if dot_distance[d] < float('inf')]
+        if nearest_dirs:
+            chosen_dir = min(nearest_dirs, key=lambda d: dot_distance[d])
+            dir_to_action[chosen_dir](game_state)
+            return
+
+        # If no dot is perceived in any legal direction, fall back to first legal option.
+        dir_to_action[food_legal_dirs[0]](game_state)
+
 def pacman_reactive_agent_no_random_mark1(game_state):
     # same as no random but better checking for multiple ghosts in multiple directions. 
     # If there are ghosts in multiple directions, move in the direction with the most free spaces and no ghosts. 
