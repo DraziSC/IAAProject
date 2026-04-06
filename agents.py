@@ -220,6 +220,131 @@ def pacman_reactive_agent_no_random(game_state):
         dir_to_action[best_dir](game_state)
 
 
+def pacman_reactive_agent_no_ramdon_legal(game_state):
+    # Copy of pacman_reactive_agent_no_random, but legal directions use wall perceptions.
+    pacman = game_state['pacman']
+    
+    dir_to_action = {
+        'up': up,
+        'down': down,
+        'left': left,
+        'right': right,
+    }
+
+    if pacman['direction'] == 'up':
+        opposite_dir = 'down'
+    elif pacman['direction'] == 'down':
+        opposite_dir = 'up'
+    elif pacman['direction'] == 'left':
+        opposite_dir = 'right'
+    elif pacman['direction'] == 'right':
+        opposite_dir = 'left'
+
+    # using range = 2 to check for ghosts in adacent cells as 1 just does current cell and we want to check for ghosts
+    # in the adjacent cells as well.
+    # This is because the ghosts can move into the current cell in the next turn.
+    if pacman_perceptions.ghost_up(game_state,2) and not pacman_perceptions.wall_down(game_state):
+        down(game_state)
+        #print("Moving down to avoid ghost above")
+    elif pacman_perceptions.ghost_down(game_state,2) and not pacman_perceptions.wall_up(game_state):
+        up(game_state)
+        #print("Moving up to avoid ghost below")
+    elif pacman_perceptions.ghost_left(game_state,2) and not pacman_perceptions.wall_right(game_state):
+        right(game_state)
+        #print("Moving right to avoid ghost on the left")
+    elif pacman_perceptions.ghost_right(game_state,2) and not pacman_perceptions.wall_left(game_state):
+        left(game_state)
+        #print("Moving left to avoid ghost on the right")
+    else:
+        if pacman_perceptions.dot_up(game_state,2) and not pacman_perceptions.wall_up(game_state):
+            up(game_state)
+            #print("Moving up towards food")
+        elif pacman_perceptions.dot_down(game_state,2) and not pacman_perceptions.wall_down(game_state):
+            down(game_state)
+            #print("Moving down towards food")
+        elif pacman_perceptions.dot_left(game_state,2) and not pacman_perceptions.wall_left(game_state):
+            left(game_state)
+            #print("Moving left towards food")
+        elif pacman_perceptions.dot_right(game_state,2) and not pacman_perceptions.wall_right(game_state):
+            right(game_state)
+            #print("Moving right towards food")
+        # If no ghost or food perceived, just pick the first legal direction based on wall perceptions.
+        else:
+            if not pacman_perceptions.wall_up(game_state) and opposite_dir != 'up':
+                up(game_state)
+            elif not pacman_perceptions.wall_down(game_state) and opposite_dir != 'down':
+                down(game_state)
+            elif not pacman_perceptions.wall_left(game_state) and opposite_dir != 'left':
+                left(game_state)
+            elif not pacman_perceptions.wall_right(game_state) and opposite_dir != 'right':
+                right(game_state)
+
+def pacman_reactive_agent_no_ramdon_legal_chaseghosts(game_state):
+    # Copy of pacman_reactive_agent_no_random, but legal directions use wall perceptions.
+    pacman = game_state['pacman']
+    
+    activeghost_detection_range = 3 # How far to check for active (non-frightened) ghosts.
+    frightenedghost_detection_range = 5 # How far to check for frightened ghosts. Set higher than active ghost range to try to chase them from further away.
+    food_detection_range = 10 # How far to check for food. Set higher than ghost ranges to try to chase food from further away.
+    
+    if pacman['direction'] == 'up':
+        opposite_dir = 'down'
+    elif pacman['direction'] == 'down':
+        opposite_dir = 'up'
+    elif pacman['direction'] == 'left':
+        opposite_dir = 'right'
+    elif pacman['direction'] == 'right':
+        opposite_dir = 'left'
+
+    # using range = 2 to check for ghosts in adacent cells as 1 just does current cell and we want to check for ghosts
+    # in the adjacent cells as well.
+    # This is because the ghosts can move into the current cell in the next turn.
+    if pacman_perceptions.ghost_up(game_state,activeghost_detection_range) and not pacman_perceptions.ghost_frightened_up(game_state,activeghost_detection_range) and not pacman_perceptions.wall_down(game_state):
+        down(game_state)
+        #print("Moving down to avoid ghost above")
+    elif pacman_perceptions.ghost_down(game_state,activeghost_detection_range) and not pacman_perceptions.ghost_frightened_down(game_state,activeghost_detection_range) and not pacman_perceptions.wall_up(game_state):
+        up(game_state)
+        #print("Moving up to avoid ghost below")
+    elif pacman_perceptions.ghost_left(game_state,activeghost_detection_range) and not pacman_perceptions.ghost_frightened_left(game_state,activeghost_detection_range) and not pacman_perceptions.wall_right(game_state):
+        right(game_state)
+        #print("Moving right to avoid ghost on the left")
+    elif pacman_perceptions.ghost_right(game_state,activeghost_detection_range) and not pacman_perceptions.ghost_frightened_right(game_state,activeghost_detection_range) and not pacman_perceptions.wall_left(game_state):
+        left(game_state)
+        #print("Moving left to avoid ghost on the right")
+    # if scared ghost perceived, move towards it to try to eat it for points.
+    else:
+        if(pacman_perceptions.ghost_frightened_up(game_state,frightenedghost_detection_range) and not pacman_perceptions.wall_up(game_state)):
+            up(game_state)
+        elif(pacman_perceptions.ghost_frightened_down(game_state,frightenedghost_detection_range) and not pacman_perceptions.wall_down(game_state)):
+            down(game_state)
+        elif(pacman_perceptions.ghost_frightened_left(game_state,frightenedghost_detection_range) and not pacman_perceptions.wall_left(game_state)):
+            left(game_state)
+        elif(pacman_perceptions.ghost_frightened_right(game_state,frightenedghost_detection_range) and not pacman_perceptions.wall_right(game_state)):
+            right(game_state)
+        else:
+            if pacman_perceptions.dot_up(game_state,food_detection_range) and not pacman_perceptions.wall_up(game_state):
+                up(game_state)
+                #print("Moving up towards food")
+            elif pacman_perceptions.dot_down(game_state,food_detection_range) and not pacman_perceptions.wall_down(game_state):
+                down(game_state)
+                #print("Moving down towards food")
+            elif pacman_perceptions.dot_left(game_state,food_detection_range) and not pacman_perceptions.wall_left(game_state):
+                left(game_state)
+                #print("Moving left towards food")
+            elif pacman_perceptions.dot_right(game_state,food_detection_range) and not pacman_perceptions.wall_right(game_state):
+                right(game_state)
+                #print("Moving right towards food")
+            # If no ghost or food perceived, just pick the first legal direction based on wall perceptions.
+            else:
+                if not pacman_perceptions.wall_up(game_state) and opposite_dir != 'up':
+                    up(game_state)
+                elif not pacman_perceptions.wall_down(game_state) and opposite_dir != 'down':
+                    down(game_state)
+                elif not pacman_perceptions.wall_left(game_state) and opposite_dir != 'left':
+                    left(game_state)
+                elif not pacman_perceptions.wall_right(game_state) and opposite_dir != 'right':
+                    right(game_state)
+
 def pacman_reactive_agent_no_random_perception(game_state):
     # Copy of pacman_reactive_agent_no_random, but food search uses directional dot perceptions.
     pacman = game_state['pacman']

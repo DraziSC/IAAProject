@@ -126,10 +126,9 @@ if __name__ == "__main__":
     # set seed
     random.seed(42)
     RunAllPolicies = True # Set to True to run benchmark for all policies, or False to run a single policy.
-    policies = [agents.pacman_reactive_agent_random, agents.pacman_reactive_agent_no_random, agents.pacman_reactive_agent_no_random_mark1,
-                agents.pacman_reactive_agent_no_random_mark2, agents.pacman_reactive_agent_no_random_mark3, agents.pacman_risk_aware_agent]
-    #policies = [agents.pacman_reactive_agent_random, agents.pacman_reactive_agent_no_random_mark1,
+    #policies = [agents.pacman_reactive_agent_no_ramdon_legal, agents.pacman_reactive_agent_random, agents.pacman_reactive_agent_no_random, agents.pacman_reactive_agent_no_random_mark1,
     #            agents.pacman_reactive_agent_no_random_mark2, agents.pacman_reactive_agent_no_random_mark3, agents.pacman_risk_aware_agent]
+    policies = policies = [agents.pacman_reactive_agent_no_ramdon_legal, agents.pacman_reactive_agent_no_ramdon_legal_chaseghosts]
     '''
     pacman_policy = agents.pacman_reactive_agent_random
     pacman_policy = agents.keyboard_controller #use the arrow keys to control pacman
@@ -157,7 +156,7 @@ if __name__ == "__main__":
             std = np.std(scores)
             print(f'Policy: {policy_name}, Max Score: {max}, Min Score: {min}, Average Score: {avg}, Standard Deviation: {std}, Wins: {winners}')
     else:
-        policy = policies[4] # Change this index to select a different policy from the list  
+        policy = policies[1] # Change this index to select a different policy from the list  
         run_benchmark(policy, num_games=100, num_workers=workers, base_seed=42)
         for policy_name, scores, winners in policyResults:
             max = np.max(scores)
