@@ -71,10 +71,11 @@ def pacman_reactive_agent_random(game_state):
   
     random.choice([up, down, left, right])(game_state)
 
-def pacman_reactive_agent_no_ramdon_legal(game_state):
+def pacman_reactive_agent_no_random_legal(game_state):
     # Copy of pacman_reactive_agent_no_random, but legal directions use wall perceptions.
     pacman = game_state['pacman']
 
+    # Determine opposite direction for later use in avoiding reversals.
     if pacman['direction'] == 'up':
         opposite_dir = 'down'
     elif pacman['direction'] == 'down':
@@ -123,8 +124,10 @@ def pacman_reactive_agent_no_ramdon_legal(game_state):
             elif not pacman_perceptions.wall_right(game_state) and opposite_dir != 'right':
                 right(game_state)
 
-def pacman_reactive_agent_no_ramdon_legal_chaseghosts(game_state):
-    # Copy of pacman_reactive_agent_no_random, but legal directions use wall perceptions.
+def pacman_reactive_agent_no_random_legal_chaseghosts(game_state):
+    # Copy of above but now chase ghosts as well 
+    # Also adds some range values for food and ghost perception to try to chase them from further away, 
+    # which can be tuned for better performance i.e. win vs score.
     pacman = game_state['pacman']
     
     activeghost_detection_range = 3 # How far to check for active (non-frightened) ghosts.
