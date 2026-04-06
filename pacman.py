@@ -49,19 +49,6 @@ def displayAllResults(results):
     plt.tight_layout()
     plt.show()
 
-    # Create bar chart for average score max score min score and wins
-    plt.figure(figsize=(10, 6))
-    plt.bar(policy_names, average_scores, color='skyblue', label='Average Score')  
-    plt.bar(policy_names, max_scores, color='lightgreen', label='Max Score', alpha=0.7)
-    plt.bar(policy_names, min_scores, color='lightcoral', label='Min Score', alpha=0.7) 
-    plt.bar(policy_names, wins, color='salmon', label='Wins', alpha=0.7)
-    plt.ylabel('Count')
-    plt.title('Average, Max and Min Scores and Wins of Pacman Policies')
-    plt.xticks(rotation=45)
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
-
     # create similiar bar chart as above but have seperate bars for each metric instead of stacked bars
     plt.figure(figsize=(10, 6))
     x = np.arange(len(policy_names))
@@ -69,7 +56,7 @@ def displayAllResults(results):
     plt.bar(x - width, average_scores, width, color='skyblue', label='Average Score')  
     plt.bar(x, max_scores, width, color='lightgreen', label='Max Score', alpha=0.7)
     plt.bar(x + width, min_scores, width, color='lightcoral', label='Min Score', alpha=0.7)
-    plt.bar(x + 2*width, wins, width, color='salmon', label='Wins', alpha=0.7)
+    plt.bar(x + 2*width, wins, width, color='yellow', label='Wins', alpha=0.7)
     plt.ylabel('Count')
     plt.title('Average, Max and Min Scores and Wins of Pacman Policies')
     plt.xticks(x, policy_names, rotation=45)
@@ -127,8 +114,9 @@ if __name__ == "__main__":
     random.seed(42)
     RunAllPolicies = True # Set to True to run benchmark for all policies, or False to run a single policy.
     #policies = [agents.pacman_reactive_agent_no_ramdon_legal, agents.pacman_reactive_agent_random, agents.pacman_reactive_agent_no_random, agents.pacman_reactive_agent_no_random_mark1,
-    #            agents.pacman_reactive_agent_no_random_mark2, agents.pacman_reactive_agent_no_random_mark3, agents.pacman_risk_aware_agent]
-    policies = policies = [agents.pacman_reactive_agent_no_ramdon_legal, agents.pacman_reactive_agent_no_ramdon_legal_chaseghosts]
+    #            agents.pacman_reactive_agent_no_random_mark2, agents.pacman_reactive_agent_no_random_mark3]
+    policies = policies = [agents.pacman_reactive_agent_random, agents.pacman_reactive_agent_no_ramdon_legal, agents.pacman_reactive_agent_no_ramdon_legal_chaseghosts,
+                           agents.pacman_reactive_agent_no_random_mark1, agents.pacman_reactive_agent_no_random_mark2, agents.pacman_reactive_agent_no_random_mark3]
     '''
     pacman_policy = agents.pacman_reactive_agent_random
     pacman_policy = agents.keyboard_controller #use the arrow keys to control pacman
