@@ -71,119 +71,6 @@ def pacman_reactive_agent_random(game_state):
   
     random.choice([up, down, left, right])(game_state)
 
-def pacman_reactive_agent_no_random(game_state):
-    # Whats this doing in English? 
-    '''
-   Rules R1–R4 handle the most critical case: when a non-scared ghost is on the same tile,
-     the agent immediately moves in the opposite direction to avoid danger. 
-     Rules R5–R8 extend this behavior to adjacent tiles, ensuring the agent proactively 
-     escapes nearby threats. If no ghost is detected, 
-     Rule R9 activates a goal-oriented behavior: the agent selects a 
-     legal direction (excluding reversal) and moves toward the nearest food source.
-    '''
-
-    # List Perceptions and Actions
-    # Perceptions                                            Actions
-    # Ghost up	                                             Move down
-    # Ghost down	                                         Move up
-    # Ghost left	                                         Move right
-    # Ghost right	                                         Move left
-    # No ghost	                                             Move towards closest food (using Manhattan distance) by direction
-    # Legal Directions
-    # Opposite Direction
-    # nearest food using Manhattan distance
-     
-    # Production rules(table):
-    # ID	    Perception	                                                                                    Action
-    # R1		Non‑scared ghost on current tile AND ghost up AND legal direction	                            Move Down.
-    # R2        Non‑scared ghost on current tile AND ghost down	AND legal direction	                            Move Up.
-    # R3        Non‑scared ghost on current tile AND ghost left	AND legal direction	                            Move Right.
-    # R4        Non‑scared ghost on current tile AND ghost right AND Legal direction	                        Move Left.
-    # R5        Non‑scared ghost in any adjacent tile AND ghost up AND Legal direction                          Move Down.
-    # R6        Non‑scared ghost in any adjacent tile AND ghost down AND Legal direction	                    Move Up.
-    # R7        Non‑scared ghost in any adjacent tile AND ghost left AND Legal direction	                    Move Right.
-    # R8        Non‑scared ghost in any adjacent tile AND ghost right AND Legal direction	                    Move Left.
-    # R9		No Ghost detected AND get legal directions AND NOT opposite AND nearest food direction	        Move toward nearest food
-    #    
-
-    # Issues: 
-    # 1. Nieve ghost check only checks for a single ghost and does not consider if ghost in new direction after move.
-    # 2. Hunt for food is greedy and can lead to cycles/local loops
-    # 3. Does not consider scared ghosts or power pellets at all.
-    # 4. Does not consider mobility or dead ends at all.
-    # 5. Does not consider predicted ghost movement at all.
-     
-    pacman = game_state['pacman']
-    grid = game_state['grid']
-    grid_size = game_state['grid_size']
-
-    current_pos = (pacman['x'], pacman['y'])
-    legal_dirs = game_engine.get_valid_directions(current_pos, grid, grid_size)
-
-    if not legal_dirs:
-        return
-
-    dir_to_action = {
-        'up': up,
-        'down': down,
-        'left': left,
-        'right': right,
-    }
-    
-    # using range = 2 to check for ghosts in adacent cells as 1 just does current cell and we want to check for ghosts 
-    # in the adjacent cells as well.
-    # This is because the ghosts can move into the current cell in the next turn.
-    if pacman_perceptions.ghost_up(game_state,2) and 'down' in legal_dirs:
-        down(game_state)
-        print("Moving down to avoid ghost above")
-    elif pacman_perceptions.ghost_down(game_state,2) and 'up' in legal_dirs:
-        up(game_state)
-        print("Moving up to avoid ghost below")
-    elif pacman_perceptions.ghost_left(game_state,2) and 'right' in legal_dirs:
-        right(game_state)
-        print("Moving right to avoid ghost on the left")
-    elif pacman_perceptions.ghost_right(game_state,2) and 'left' in legal_dirs:
-        left(game_state)
-        print("Moving left to avoid ghost on the right")
-    else:
-        food_legal_dirs = legal_dirs.copy()
-        # Avoid reversing direction unless forced, to prevent oscillation.
-        op = game_engine.opposite_direction(pacman['direction'])
-        # Only remove the opposite direction if there are other options, otherwise we might end up with no legal moves.
-        if len(food_legal_dirs) > 1 and op in food_legal_dirs:
-            food_legal_dirs.remove(op)
-
-        # If removing the opposite direction leaves us with no options, we have to allow it to prevent getting stuck.
-        if not food_legal_dirs:
-            food_legal_dirs = legal_dirs
-
-        # No immediate ghost threat, move towards closest food
-        # print('No immediate ghost threat, moving towards closest food' )
-        food_positions = []
-
-        for y, row in enumerate(grid):
-            for x, cell in enumerate(row):
-                if cell == game_engine.DOT or cell == game_engine.POWER_PELLET:
-                    food_positions.append((x, y))
-        if not food_positions:
-            return
-        
-        nearest_food = min(food_positions, key=lambda fp: game_engine.manhattan_distance(current_pos, fp))
-        best_dir = food_legal_dirs[0]
-        best_pos = game_engine.compute_new_pos(current_pos, best_dir)
-        best_dist = game_engine.manhattan_distance(best_pos, nearest_food)
-        
-        # Greedily choose the move that minimizes distance to the nearest food. This can lead to local loops, but is a simple starting point.
-        for d in food_legal_dirs:
-            cand_pos = game_engine.compute_new_pos(current_pos, d)
-            cand_dist = game_engine.manhattan_distance(cand_pos, nearest_food)
-            if cand_dist < best_dist:
-                best_dist = cand_dist
-                best_pos = cand_pos
-                best_dir = d
-        dir_to_action[best_dir](game_state)
-
-
 def pacman_reactive_agent_no_ramdon_legal(game_state):
     # Copy of pacman_reactive_agent_no_random, but legal directions use wall perceptions.
     pacman = game_state['pacman']
@@ -301,6 +188,131 @@ def pacman_reactive_agent_no_ramdon_legal_chaseghosts(game_state):
                     left(game_state)
                 elif not pacman_perceptions.wall_right(game_state) and opposite_dir != 'right':
                     right(game_state)
+
+
+############################################################################################################################
+#
+#
+#  Aditional agents below show what is possible to do achieve i.e. high win rate or high score by implementing
+#  more complex behaviors and using more techniques such as pathfinding, advanced ghost prediction, dead end detection, etc. 
+#  These however use data that is not in perceptions and should not be available to pacman. They are included to show
+#  what is possible with more complex behaviors and more information, but are not meant to be used as part of the main benchmark 
+#  as they are not comparable to the other agents that only use perceptions.
+#
+#
+#############################################################################################################################
+
+def pacman_reactive_agent_no_random(game_state):
+    # Whats this doing in English? 
+    '''
+   Rules R1–R4 handle the most critical case: when a non-scared ghost is on the same tile,
+     the agent immediately moves in the opposite direction to avoid danger. 
+     Rules R5–R8 extend this behavior to adjacent tiles, ensuring the agent proactively 
+     escapes nearby threats. If no ghost is detected, 
+     Rule R9 activates a goal-oriented behavior: the agent selects a 
+     legal direction (excluding reversal) and moves toward the nearest food source.
+    '''
+
+    # List Perceptions and Actions
+    # Perceptions                                            Actions
+    # Ghost up	                                             Move down
+    # Ghost down	                                         Move up
+    # Ghost left	                                         Move right
+    # Ghost right	                                         Move left
+    # No ghost	                                             Move towards closest food (using Manhattan distance) by direction
+    # Legal Directions
+    # Opposite Direction
+    # nearest food using Manhattan distance
+     
+    # Production rules(table):
+    # ID	    Perception	                                                                                    Action
+    # R1		Non‑scared ghost on current tile AND ghost up AND legal direction	                            Move Down.
+    # R2        Non‑scared ghost on current tile AND ghost down	AND legal direction	                            Move Up.
+    # R3        Non‑scared ghost on current tile AND ghost left	AND legal direction	                            Move Right.
+    # R4        Non‑scared ghost on current tile AND ghost right AND Legal direction	                        Move Left.
+    # R5        Non‑scared ghost in any adjacent tile AND ghost up AND Legal direction                          Move Down.
+    # R6        Non‑scared ghost in any adjacent tile AND ghost down AND Legal direction	                    Move Up.
+    # R7        Non‑scared ghost in any adjacent tile AND ghost left AND Legal direction	                    Move Right.
+    # R8        Non‑scared ghost in any adjacent tile AND ghost right AND Legal direction	                    Move Left.
+    # R9		No Ghost detected AND get legal directions AND NOT opposite AND nearest food direction	        Move toward nearest food
+    #    
+
+    # Issues: 
+    # 1. Nieve ghost check only checks for a single ghost and does not consider if ghost in new direction after move.
+    # 2. Hunt for food is greedy and can lead to cycles/local loops
+    # 3. Does not consider scared ghosts or power pellets at all.
+    # 4. Does not consider mobility or dead ends at all.
+    # 5. Does not consider predicted ghost movement at all.
+     
+    pacman = game_state['pacman']
+    grid = game_state['grid']
+    grid_size = game_state['grid_size']
+
+    current_pos = (pacman['x'], pacman['y'])
+    legal_dirs = game_engine.get_valid_directions(current_pos, grid, grid_size)
+
+    if not legal_dirs:
+        return
+
+    dir_to_action = {
+        'up': up,
+        'down': down,
+        'left': left,
+        'right': right,
+    }
+    
+    # using range = 2 to check for ghosts in adacent cells as 1 just does current cell and we want to check for ghosts 
+    # in the adjacent cells as well.
+    # This is because the ghosts can move into the current cell in the next turn.
+    if pacman_perceptions.ghost_up(game_state,2) and 'down' in legal_dirs:
+        down(game_state)
+        print("Moving down to avoid ghost above")
+    elif pacman_perceptions.ghost_down(game_state,2) and 'up' in legal_dirs:
+        up(game_state)
+        print("Moving up to avoid ghost below")
+    elif pacman_perceptions.ghost_left(game_state,2) and 'right' in legal_dirs:
+        right(game_state)
+        print("Moving right to avoid ghost on the left")
+    elif pacman_perceptions.ghost_right(game_state,2) and 'left' in legal_dirs:
+        left(game_state)
+        print("Moving left to avoid ghost on the right")
+    else:
+        food_legal_dirs = legal_dirs.copy()
+        # Avoid reversing direction unless forced, to prevent oscillation.
+        op = game_engine.opposite_direction(pacman['direction'])
+        # Only remove the opposite direction if there are other options, otherwise we might end up with no legal moves.
+        if len(food_legal_dirs) > 1 and op in food_legal_dirs:
+            food_legal_dirs.remove(op)
+
+        # If removing the opposite direction leaves us with no options, we have to allow it to prevent getting stuck.
+        if not food_legal_dirs:
+            food_legal_dirs = legal_dirs
+
+        # No immediate ghost threat, move towards closest food
+        # print('No immediate ghost threat, moving towards closest food' )
+        food_positions = []
+
+        for y, row in enumerate(grid):
+            for x, cell in enumerate(row):
+                if cell == game_engine.DOT or cell == game_engine.POWER_PELLET:
+                    food_positions.append((x, y))
+        if not food_positions:
+            return
+        
+        nearest_food = min(food_positions, key=lambda fp: game_engine.manhattan_distance(current_pos, fp))
+        best_dir = food_legal_dirs[0]
+        best_pos = game_engine.compute_new_pos(current_pos, best_dir)
+        best_dist = game_engine.manhattan_distance(best_pos, nearest_food)
+        
+        # Greedily choose the move that minimizes distance to the nearest food. This can lead to local loops, but is a simple starting point.
+        for d in food_legal_dirs:
+            cand_pos = game_engine.compute_new_pos(current_pos, d)
+            cand_dist = game_engine.manhattan_distance(cand_pos, nearest_food)
+            if cand_dist < best_dist:
+                best_dist = cand_dist
+                best_pos = cand_pos
+                best_dir = d
+        dir_to_action[best_dir](game_state)
 
 def pacman_reactive_agent_no_random_perception(game_state):
     # Copy of pacman_reactive_agent_no_random, but food search uses directional dot perceptions.
